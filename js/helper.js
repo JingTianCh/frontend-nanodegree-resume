@@ -1,27 +1,23 @@
 /*
-
-This file contains all of the code running in the background that makes resumeBuilder.js possible. We call these helper functions because they support your code in this course.
-
-Don't worry, you'll learn what's going on in this file throughout the course. You won't need to make any changes to it until you start experimenting with inserting a Google Map in Problem Set 3.
-
+此文件包含所有能使得 resumeBuilder.js 能够运行的代码。 我们称之为帮助函数，因为它们支持您在本课程中的代码。
+不要担心，您将在整个课程中了解此文件中发生的情况。
 Cameron Pittman
 */
 
-
 /*
-These are HTML strings. As part of the course, you'll be using JavaScript functions
-replace the %data% placeholder text you see in them.
+这些是 HTML 字符串。 作为课程的一部分，
+您将使用JavaScript函数替换您在其中看到的 ％data％ 占位符文本。
 */
 var HTMLheaderName = '<h1 id="name">%data%</h1>';
 var HTMLheaderRole = '<span>%data%</span><hr>';
 
 var HTMLcontactGeneric = '<li class="flex-item"><span class="orange-text">%contact%</span><span class="white-text">%data%</span></li>';
-var HTMLmobile = '<li class="flex-item"><span class="orange-text">mobile</span><span class="white-text">%data%</span></li>';
-var HTMLemail = '<li class="flex-item"><span class="orange-text">email</span><span class="white-text">%data%</span></li>';
-var HTMLtwitter = '<li class="flex-item"><span class="orange-text">twitter</span><span class="white-text">%data%</span></li>';
-var HTMLgithub = '<li class="flex-item"><span class="orange-text">github</span><span class="white-text">%data%</span></li>';
-var HTMLblog = '<li class="flex-item"><span class="orange-text">blog</span><span class="white-text">%data%</span></li>';
-var HTMLlocation = '<li class="flex-item"><span class="orange-text">location</span><span class="white-text">%data%</span></li>';
+var HTMLmobile = '<li class="flex-item"><a href="tel:%data%" target="_blank"><span class="orange-text"><span class="zocial-call"></span>mobile</span><span class="white-text">%data%</span></a></li>';
+var HTMLemail = '<li class="flex-item"><a href="mailto:%data%" target="_blank"><span class="orange-text"><span class="zocial-email"></span>email</span><span class="white-text">%data%</span></a></li>';
+var HTMLtwitter = '<li class="flex-item"><a href="https://twitter.com/search?q=%data%" target="_blank"><span class="orange-text"><span class="zocial-twitter"></span>twitter</span><span class="white-text">%data%</span></a></li>';
+var HTMLgithub = '<li class="flex-item"><a target="_blank" href="https://github.com/search?utf8=%E2%9C%93&q=%data%&type=Users"><span class="orange-text"><span class="zocial-github"></span>github</span><span class="white-text">%data%</span></a></li>';
+var HTMLblog = '<li class="flex-item"><a target="_blank" href="https://plus.google.com/s/%data%/people"><span class="orange-text"><span class="zocial-blogger"></span>blog</span><span class="white-text">%data%</span></a></li>';
+var HTMLlocation = '<li class="flex-item"><a target="_blank" href="http://ditu.amap.com/search?query=%data%"><span class="orange-text"><span class="zocial-pinboard"></span>location</span><span class="white-text">%data%</span></a></li>';
 
 var HTMLbioPic = '<img src="%data%" class="biopic">';
 var HTMLwelcomeMsg = '<span class="welcome-message">%data%</span>';
@@ -56,7 +52,7 @@ var HTMLonlineDates = '<div class="date-text">%data%</div>';
 var HTMLonlineURL = '<br><a href="#">%data%</a>';
 
 var internationalizeButton = '<button>Internationalize</button>';
-var googleMap = '<div id="map"></div>';
+var gaodeMap = '<div id="map"></div>';
 
 
 /*
@@ -65,7 +61,7 @@ The Internationalize Names challenge found in the lesson Flow Control from JavaS
 $(document).ready(function() {
   $('button').click(function() {
     var $name = $('#name');
-    var iName = inName($name.text()) || function(){};
+    var iName = inName($name.text()) || function() {};
     $name.html(iName);
   });
 });
@@ -75,13 +71,11 @@ The next few lines about clicks are for the Collecting Click Locations quiz in t
 */
 var clickLocations = [];
 
-function logClicks(x,y) {
-  clickLocations.push(
-    {
-      x: x,
-      y: y
-    }
-  );
+function logClicks(x, y) {
+  clickLocations.push({
+    x: x,
+    y: y
+  });
   console.log('x location: ' + x + '; y location: ' + y);
 }
 
@@ -92,158 +86,126 @@ $(document).click(function(loc) {
 
 
 /*
-This is the fun part. Here's where we generate the custom Google Map for the website.
-See the documentation below for more details.
-https://developers.google.com/maps/documentation/javascript/reference
+这是有趣的部分。 这里是我们为网站生成自定义高德地图的地方。
+有关详细信息，请参阅以下文档。
+http://lbs.amap.com/
 */
-var map;    // declares a global map variable
-
+var map; // 声明一个全局变量，存储地图对象
 
 /*
-Start here! initializeMap() is called when page is loaded.
+从这里开始！ 在加载页面时会调用initializeMap（）
 */
 function initializeMap() {
-
-  var locations;
-
-  var mapOptions = {
-    disableDefaultUI: true
-  };
-
-  /*
-  For the map to be displayed, the googleMap var must be
-  appended to #mapDiv in resumeBuilder.js.
-  */
-  map = new google.maps.Map(document.querySelector('#map'), mapOptions);
-
-
-  /*
-  locationFinder() returns an array of every location string from the JSONs
-  written for bio, education, and work.
-  */
-  function locationFinder() {
-
-    // initializes an empty array
-    var locations = [];
-
-    // adds the single location property from bio to the locations array
-    locations.push(bio.contacts.location);
-
-    // iterates through school locations and appends each location to
-    // the locations array. Note that forEach is used for array iteration
-    // as described in the Udacity FEND Style Guide:
-    // https://udacity.github.io/frontend-nanodegree-styleguide/javascript.html#for-in-loop
-    education.schools.forEach(function(school){
-      locations.push(school.location);
+    // 创建地图对象
+    map = new AMap.Map('map', {
+        resizeEnable: true,
+        center: [114.305215, 30.592935],
+        zoom: 9
     });
 
-    // iterates through work locations and appends each location to
-    // the locations array. Note that forEach is used for array iteration
-    // as described in the Udacity FEND Style Guide:
-    // https://udacity.github.io/frontend-nanodegree-styleguide/javascript.html#for-in-loop
-    work.jobs.forEach(function(job){
-      locations.push(job.location);
+    map.plugin(["AMap.ToolBar"], function () {
+        // 添加 工具条
+        map.addControl(new AMap.ToolBar());
     });
 
-    return locations;
-  }
+    var locations = locationFinder();
+      locations.forEach(function(place) {
+        searchLocation(place);
+      });
+    map.setFitView();
 
-  /*
-  createMapMarker(placeData) reads Google Places search results to create map pins.
-  placeData is the object returned from search results containing information
-  about a single location.
-  */
-  function createMapMarker(placeData) {
-
-    // The next lines save location data from the search result object to local variables
-    var lat = placeData.geometry.location.lat();  // latitude from the place service
-    var lon = placeData.geometry.location.lng();  // longitude from the place service
-    var name = placeData.formatted_address;   // name of the place from the place service
-    var bounds = window.mapBounds;            // current boundaries of the map window
-
-    // marker is an object with additional data about the pin for a single location
-    var marker = new google.maps.Marker({
-      map: map,
-      position: placeData.geometry.location,
-      title: name
-    });
-
-    // infoWindows are the little helper windows that open when you click
-    // or hover over a pin on a map. They usually contain more information
-    // about a location.
-    var infoWindow = new google.maps.InfoWindow({
-      content: name
-    });
-
-    // hmmmm, I wonder what this is about...
-    google.maps.event.addListener(marker, 'click', function() {
-      // your code goes here!
-    });
-
-    // this is where the pin actually gets added to the map.
-    // bounds.extend() takes in a map location object
-    bounds.extend(new google.maps.LatLng(lat, lon));
-    // fit the map to the new marker
-    map.fitBounds(bounds);
-    // center the map
-    map.setCenter(bounds.getCenter());
-  }
-
-  /*
-  callback(results, status) makes sure the search returned results for a location.
-  If so, it creates a new map marker for that location.
-  */
-  function callback(results, status) {
-    if (status == google.maps.places.PlacesServiceStatus.OK) {
-      createMapMarker(results[0]);
+    map.addControl(new AMap.ToolBar());
+    if (AMap.UA.mobile) {
+        document.getElementById('button_group').style.display = 'none';
     }
-  }
+}
+//这个函数会读取，你在 resumeBuilder.js 所写下的全部有关地址的数据
+function locationFinder() {
 
-  /*
-  pinPoster(locations) takes in the array of locations created by locationFinder()
-  and fires off Google place searches for each location
-  */
-  function pinPoster(locations) {
+  // 初始化一个空的数组，用来存储地点
+  var locations = [];
 
-    // creates a Google place search service object. PlacesService does the work of
-    // actually searching for location data.
-    var service = new google.maps.places.PlacesService(map);
+  //将 bio 的 contacts 数据里的地址添加到 locations 数组里
+  locations.push(bio.contacts.location);
 
-    // Iterates through the array of locations, creates a search object for each location
-      locations.forEach(function(place){
-      // the search request object
-      var request = {
-        query: place
-      };
 
-      // Actually searches the Google Maps API for location data and runs the callback
-      // function with the search results after each search.
-      service.textSearch(request, callback);
-    });
-  }
+  //迭代 education 的 schools 数据里的地址，并将地址添加到 locations 数组里
+  education.schools.forEach(function(school) {
+    locations.push(school.location);
+  });
 
-  // Sets the boundaries of the map based on pin locations
-  window.mapBounds = new google.maps.LatLngBounds();
 
-  // locations is an array of location strings returned from locationFinder()
-  locations = locationFinder();
+  // 迭代 work 的 jobs 数据里的地址，并将地址添加到 locations 数组里
+  work.jobs.forEach(function(job) {
+    locations.push(job.location);
+  });
 
-  // pinPoster(locations) creates pins on the map for each location in
-  // the locations array
-  pinPoster(locations);
+  return locations;
+}
+var infoWindow = new AMap.InfoWindow({
+    offset: new AMap.Pixel(15, -20)
+});
+//根据地址的名字，将标记添加上地图上
+function searchLocation(name) {
+    AMap.plugin('AMap.PlaceSearch', function () { //回调函数
+    var placeSearch = new AMap.PlaceSearch({
+                    city:'027',
+                    pageSize:6
+                });
+        //使用placeSearch对象调用关键字搜索的功能
+        placeSearch.search(name, function (status, data) {
+            if (status !== 'complete') return;
+            var pois = data.poiList.pois; 
+                var marker = new AMap.Marker({
+                    content: '<div class="marker" >' + '</div>',
+                    position: pois[0].location,
+                    map: map,
+                });
+               marker.setLabel({
+                    offset: new AMap.Pixel(20, 20), //修改label相对于maker的位置
+                    content: pois[0].name
+                });
+                marker.setTitle(pois[0].name+'\r\n地址：'+pois[0].address+'\r\n电话：'+pois[0].tel);
+            
+                marker.content='<span class="infoWindow"><b>'+pois[0].name+"</b><a class='inline'  href='http://ditu.amap.com/detail/"+pois[0].id+"' target='_blank'>详细信息</a>"+'<br/>地址：'+pois[0].address+'<br/>电话：'+pois[0].tel+'</span>';
+               // marker.setAnimation('AMAP_ANIMATION_BOUNCE');
+                marker.id = pois[0].id;
+                marker.name = pois[0].name;
+/*                marker.on('click', function () {
+                    
+                    // map.detailOnAMAP({
+                    //     id:this.id
+                    // },marker)
+//                    map.poiOnAMAP({
+//                        name: this.name,
+//                        location: this.getPosition(),
+//                        id: this.id
+//                    })
+                });*/
+                marker.on('click',markerClick);
+                marker.emit('click',{target:marker});
+            //0905鼠标点击marker弹出自定义的信息窗体
+//        AMap.event.addListener(marker, 'click', function() {
+//            infoWindow.open(map, marker.getPosition());
+//        });
 
+           map.setFitView();  
+        })
+    })
 }
 
-/*
-Uncomment the code below when you're ready to implement a Google Map!
-*/
+    function markerClick(e){
+        infoWindow.setContent(e.target.content);
+        infoWindow.open(map, e.target.getPosition());
+    }
+//关闭信息窗体
+function closeInfoWindow() {
+        map.clearInfoWindow();
+    }
+// 在加载页面时调用 initializeMap（）函数
+window.addEventListener('load', initializeMap);
 
-// Calls the initializeMap() function when the page loads
-//window.addEventListener('load', initializeMap);
-
-// Vanilla JS way to listen for resizing of the window
-// and adjust map bounds
-//window.addEventListener('resize', function(e) {
-  //Make sure the map bounds get updated on page resize
-//  map.fitBounds(mapBounds);
-//});
+// 当页面的大小改变时，调整地图的缩放
+window.addEventListener('resize', function(e) {
+  map.setFitView();
+});
